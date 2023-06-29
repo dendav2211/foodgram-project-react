@@ -102,8 +102,8 @@ class RecipeReadSerializer(ModelSerializer):
         user = self.get_user()
         try:
             return (
-                   user.is_authenticated and user.shopping_cart.recipes.filter
-                   (pk__in=(obj.pk)).exists()
+                user.is_authenticated and user.shopping_cart.recipes.filter
+                (pk__in=(obj.pk)).exists()
             )
         except ShoppingCart.DoesNotExist:
             return False
