@@ -17,13 +17,15 @@ SHOPPING_CART_RECIPE_ALREADY_EXISTS_ERROR = (
     'Данный рецепт уже есть в вашем списке покупок!'
 )
 
+MAX_LENGTH = 150
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = EmailField('Почта', max_length=254, unique=True)
-    username = CharField('Никнейм', max_length=150)
-    first_name = CharField('Имя', max_length=150)
-    last_name = CharField('Фамилия', max_length=150)
-    password = CharField('Пароль', max_length=150)
+    username = CharField('Никнейм', max_length=MAX_LENGTH)
+    first_name = CharField('Имя', max_length=MAX_LENGTH)
+    last_name = CharField('Фамилия', max_length=MAX_LENGTH)
+    password = CharField('Пароль', max_length=MAX_LENGTH)
     is_superuser = BooleanField('Администратор', default=False)
     is_blocked = BooleanField('Заблокирован', default=False)
 

@@ -26,11 +26,31 @@ INGREDIENT_MIN_AMOUNT_ERROR = (
     'Количество ингредиентов не может быть меньше {min_value}!'
 )
 
+FIELD_NAME = 'Название'
+COLOR_HEX = 'Цвет в HEX'
+UNIT = 'Единица измерения'
+SLUG = 'Слаг'
+MAX_LENGTH = 200
+MAX_LENGTH_HEX = 6
+
+
+class Ingredient(Model):
+    name = CharField(FIELD_NAME, max_length=MAX_LENGTH)
+    measurement_unit = CharField(UNIT, max_length=MAX_LENGTH)
+
+    class Meta:
+        verbose_name = 'Ингредиент'
+        verbose_name_plural = 'Ингредиенты'
+        ordering = ('name',)
+
+    def __str__(self):
+        return f'{self.name}'
+
 
 class Tag(Model):
-    name = CharField('Название', max_length=200)
-    color = CharField('Цвет в HEX', max_length=7)
-    slug = SlugField('Слаг', max_length=200)
+    name = CharField(FIELD_NAME, max_length=MAX_LENGTH)
+    color = CharField(COLOR_HEX, max_length=MAX_LENGTH_HEX)
+    slug = SlugField(SLUG, max_length=MAX_LENGTH)
 
     class Meta:
         verbose_name = 'Тег'
@@ -43,30 +63,15 @@ class Tag(Model):
         return reverse('tag', args=[self.slug])
 
 
-class Ingredient(Model):
-    name = CharField('Название', max_length=200)
-    measurement_unit = CharField('Единица измерения', max_length=200)
-
-    class Meta:
-        verbose_name = 'Ингредиент'
-        verbose_name_plural = 'Ингредиенты'
-        ordering = ('name',)
-
-    def __str__(self):
-        return f'{self.name}'
-
-
 class Recipe(Model):
-    name = CharField('Название', max_length=200)
+    name = CharField(FIELD_NAME, max_length=MAX_LENGTH)
     text = TextField('Описание')
     ingredients = ManyToManyField(
         'CountOfIngredient',
-        related_name='recipes',
         verbose_name='Ингредиенты'
     )
     tags = ManyToManyField(
         Tag,
-        related_name='recipes',
         verbose_name='Теги'
     )
     image = ImageField('Картинка')
@@ -81,7 +86,6 @@ class Recipe(Model):
         User,
         on_delete=SET_NULL,
         null=True,
-        related_name='recipes',
         verbose_name='Автор',
     )
 
@@ -89,6 +93,7 @@ class Recipe(Model):
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
         ordering = ('-pk',)
+        default_related_name = 'recipes'
 
     def __str__(self):
         return f'{self.name} ({self.author})'
@@ -135,19 +140,18 @@ class Favorite(Model):
     user = ForeignKey(
         User,
         on_delete=CASCADE,
-        related_name='favorites',
         verbose_name='Пользователь',
     )
     recipe = ForeignKey(
         Recipe,
         on_delete=CASCADE,
-        related_name='favorites',
         verbose_name='Рецепт',
     )
 
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
+        default_related_name = 'favorites'
         constraints = (
             UniqueConstraint(
                 fields=('user', 'recipe',),
