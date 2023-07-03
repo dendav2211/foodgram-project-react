@@ -7,7 +7,7 @@ from django_filters.rest_framework import (
 )
 
 from users.models import ShoppingCart
-from .models import Ingredient, Recipe
+from recipes.models import Ingredient, Recipe
 
 
 class IngredientSearchFilter(FilterSet):

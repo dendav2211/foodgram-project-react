@@ -18,7 +18,7 @@ from rest_framework.viewsets import GenericViewSet
 from foodgram.constants import ERRORS_KEY
 from foodgram.pagination import LimitPageNumberPagination
 from recipes.models import Recipe
-from recipes.serializers.nested import RecipeShortReadSerializer
+from api.serializers.nested import RecipeShortReadSerializer
 from .models import ShoppingCart, Subscribe, User
 from .serializers import SubscriptionSerializer
 

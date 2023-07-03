@@ -81,6 +81,7 @@ class ShoppingCart(Model):
         on_delete=CASCADE,
         related_name='shopping_cart',
         verbose_name='Пользователь',
+        unique=True,
     )
     recipes = ManyToManyField(
         'recipes.Recipe',

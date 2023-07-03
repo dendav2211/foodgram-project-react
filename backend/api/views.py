@@ -17,8 +17,8 @@ from foodgram.mixins import ListRetriveViewSet
 from foodgram.pagination import LimitPageNumberPagination
 from foodgram.permissions import IsAuthorOrAdminOrReadOnly
 from .filters import IngredientSearchFilter, RecipeFilter
-from .models import Favorite, Ingredient, Recipe, Tag
-from .serializers.common import (
+from recipes.models import Favorite, Ingredient, Recipe, Tag
+from api.serializers.common import (
     IngredientSerializer,
     RecipeReadSerializer,
     RecipeWriteSerializer,
