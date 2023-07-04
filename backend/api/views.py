@@ -13,9 +13,9 @@ from rest_framework.status import (
 from rest_framework.viewsets import ModelViewSet
 
 from foodgram.constants import ERRORS_KEY
-from foodgram.mixins import ListRetriveViewSet
-from foodgram.pagination import LimitPageNumberPagination
-from foodgram.permissions import IsAuthorOrAdminOrReadOnly
+from api.mixins import ListRetriveViewSet
+from api.pagination import LimitPageNumberPagination
+from api.permissions import IsAuthorOrAdminOrReadOnly
 from .filters import IngredientSearchFilter, RecipeFilter
 from recipes.models import Favorite, Ingredient, Recipe, Tag
 from api.serializers.common import (
