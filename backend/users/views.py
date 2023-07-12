@@ -138,7 +138,7 @@ class ShoppingCartViewSet(GenericViewSet):
             return Response(
                 {ERRORS_KEY: SHOPPING_CART_RECIPE_CANNOT_ADD_TWICE},
                 status=HTTP_400_BAD_REQUEST,
-             )
+                )
         shopping_cart.recipes.add(recipe)
         serializer = self.get_serializer(recipe)
         return Response(serializer.data, status=HTTP_201_CREATED)
@@ -153,6 +153,6 @@ class ShoppingCartViewSet(GenericViewSet):
             return Response(
                 {ERRORS_KEY: SHOPPING_CART_RECIPE_CANNOT_DELETE},
                 status=HTTP_400_BAD_REQUEST,
-             )
+                )
         shopping_cart.recipes.remove(recipe)
         return Response(status=HTTP_204_NO_CONTENT)
