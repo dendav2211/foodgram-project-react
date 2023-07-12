@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.core.exceptions import ValidationError
 from django.db.models import (
     CASCADE,
     BooleanField,
@@ -8,7 +9,6 @@ from django.db.models import (
     ManyToManyField,
     Model,
     OneToOneField,
-    UniqueConstraint
 )
 
 from .managers import UserManager
@@ -33,6 +33,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['username']
 
     objects = UserManager()
+
+    def generate_shopping_cart_data(self):
+        recipes = self.shopping_cart.recipes.prefetch_related('ingredients')
+        return (
+            recipes.order_by('ingredients__ingredient__name')
+            .values('ingredients__ingredient__name',
+                    'ingredients__ingredient__measurement_unit')
+            .annotate(total=Sum('ingredients__amount'))
+        )
 
     class Meta:
         ordering = ('-pk',)
@@ -64,15 +73,13 @@ class Subscribe(Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        constraints = (
-            UniqueConstraint(
-                fields=('user', 'author',),
-                name='unique_subscribe',
-            ),
-        )
 
     def __str__(self):
         return f'{self.user} -> {self.author}'
+
+    def clean(self):
+        if self.user == self.author:
+            raise ValidationError('Пользователь не может подписаться на самого себя!')
 
 
 class ShoppingCart(Model):

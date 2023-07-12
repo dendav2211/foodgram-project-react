@@ -1,4 +1,3 @@
-from django.db import IntegrityError
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -61,7 +60,7 @@ class UserSubscribeViewSet(UserViewSet):
 
     @action(detail=False, permission_classes=(IsAuthenticated,))
     def subscriptions(self, request):
-        queryset = User.objects.filter(subscribing__user=request.user)
+        queryset = request.user.subscribing.all()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_subscription_serializer(page, many=True)
@@ -70,43 +69,23 @@ class UserSubscribeViewSet(UserViewSet):
         return Response(serializer.data, status=HTTP_200_OK)
 
     @action(
-        methods=['post', 'delete'],
+        methods=['delete'],
         detail=True,
         permission_classes=[IsAuthenticated]
     )
     def subscribe(self, request, user_id=None):
         author = get_object_or_404(User, pk=user_id)
-        if request.user == author:
-            return Response(
-                {ERRORS_KEY: SUBSCRIBE_CANNOT_CREATE_TO_YOURSELF},
-                status=HTTP_400_BAD_REQUEST,
-            )
-        if request.method == 'POST':
-            try:
-                subscribe = Subscribe.objects.create(
-                    user=request.user,
-                    author=author,
-                )
-            except IntegrityError:
-                return Response(
-                    {ERRORS_KEY: SUBSCRIBE_CANNOT_CREATE_TWICE},
-                    status=HTTP_400_BAD_REQUEST,
-                )
-            serializer = self.get_subscription_serializer(subscribe.author)
-            return Response(serializer.data, status=HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            try:
-                subscription = Subscribe.objects.get(
-                    user=request.user,
-                    author=author
-                )
-            except Subscribe.DoesNotExist:
-                return Response(
-                    {ERRORS_KEY: SUBSCRIBE_CANNOT_DELETE},
-                    status=HTTP_400_BAD_REQUEST,
-                )
+        subscription = get_object_or_404(
+            Subscribe,
+            user=request.user,
+            author=author
+        )
+
+        if request.method == 'DELETE':
             subscription.delete()
             return Response(status=HTTP_204_NO_CONTENT)
+
+        return Response(status=HTTP_400_BAD_REQUEST)
 
 
 class ShoppingCartViewSet(GenericViewSet):
@@ -127,50 +106,55 @@ class ShoppingCartViewSet(GenericViewSet):
         )
 
     def generate_ingredients_content(self, ingredients):
-        content = ''
-        for ingredient in ingredients:
-            content += (
-                f'{ingredient[self.NAME]}'
-                f' ({ingredient[self.MEASUREMENT_UNIT]})'
-                f' — {ingredient["total"]}\r\n'
-            )
+        content = "\r\n".join(
+            f"{ingredient[self.NAME]} ({ingredient[self.MEASUREMENT_UNIT]})"
+            f"— {ingredient['total']}"
+            for ingredient in ingredients
+        )
         return content
 
     @action(detail=False)
     def download_shopping_cart(self, request):
         try:
-            ingredients = self.generate_shopping_cart_data(request)
+            ingredients = request.user.generate_shopping_cart_data()
         except ShoppingCart.DoesNotExist:
             return Response(
                 {ERRORS_KEY: SHOPPING_CART_DOES_NOT_EXIST},
                 status=HTTP_400_BAD_REQUEST
             )
         content = self.generate_ingredients_content(ingredients)
-        response = HttpResponse(
-            content, content_type='text/plain;charset=utf-8'
-        )
+        response = HttpResponse(content,
+                                content_type='text/plain;charset=utf-8')
         response['Content-Disposition'] = f'attachment; filename={FILE_NAME}'
         return response
 
-    @action(methods=['post', 'delete'], detail=True)
-    def shopping_cart(self, request, pk=None):
+    @action(methods=['post'], detail=True)
+    def add_to_shopping_cart(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         shopping_cart, _ = ShoppingCart.objects.get_or_create(
             user=request.user)
-        if request.method == 'POST':
-            if shopping_cart.recipes.filter(pk=recipe.pk).exists():
-                return Response(
-                    {ERRORS_KEY: SHOPPING_CART_RECIPE_CANNOT_ADD_TWICE},
-                    status=HTTP_400_BAD_REQUEST,
-                )
-            shopping_cart.recipes.add(recipe)
-            serializer = self.get_serializer(recipe)
-            return Response(serializer.data, status=HTTP_201_CREATED)
-        elif request.method == 'DELETE':
-            if not shopping_cart.recipes.filter(pk=recipe.pk).exists():
-                return Response(
-                    {ERRORS_KEY: SHOPPING_CART_RECIPE_CANNOT_DELETE},
-                    status=HTTP_400_BAD_REQUEST,
-                )
-            shopping_cart.recipes.remove(recipe)
-            return Response(status=HTTP_204_NO_CONTENT)
+
+        if shopping_cart.recipes.filter(pk=recipe.pk).exists():
+            return Response(
+                {ERRORS_KEY: SHOPPING_CART_RECIPE_CANNOT_ADD_TWICE},
+                status=HTTP_400_BAD_REQUEST,
+             )
+
+        shopping_cart.recipes.add(recipe)
+        serializer = self.get_serializer(recipe)
+        return Response(serializer.data, status=HTTP_201_CREATED)
+
+    @action(methods=['delete'], detail=True)
+    def remove_from_shopping_cart(self, request, pk=None):
+        recipe = get_object_or_404(Recipe, pk=pk)
+        shopping_cart, _ = ShoppingCart.objects.get_or_create(
+            user=request.user)
+
+        if not shopping_cart.recipes.filter(pk=recipe.pk).exists():
+            return Response(
+                {ERRORS_KEY: SHOPPING_CART_RECIPE_CANNOT_DELETE},
+                status=HTTP_400_BAD_REQUEST,
+             )
+
+        shopping_cart.recipes.remove(recipe)
+        return Response(status=HTTP_204_NO_CONTENT)
