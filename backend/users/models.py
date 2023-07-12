@@ -1,3 +1,4 @@
+from django.db.models import Sum
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.db.models import (
@@ -79,7 +80,8 @@ class Subscribe(Model):
 
     def clean(self):
         if self.user == self.author:
-            raise ValidationError('Пользователь не может подписаться на самого себя!')
+            raise ValidationError(
+                'Пользователь не может подписаться на самого себя!')
 
 
 class ShoppingCart(Model):
