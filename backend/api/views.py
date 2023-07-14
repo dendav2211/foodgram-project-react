@@ -89,7 +89,14 @@ class RecipeViewSet(ModelViewSet):
             serializer.data, status=HTTP_200_OK
         )
 
-    def add_to_favorite(self, request, recipe):
+    @action(
+        methods=['POST'],
+        detail=True,
+        permission_classes=[IsAuthenticated]
+    )
+    def favorite(self, request, pk=None):
+        recipe = get_object_or_404(Recipe, pk=pk)
+
         try:
             Favorite.objects.create(user=request.user, recipe=recipe)
         except IntegrityError:
@@ -97,29 +104,24 @@ class RecipeViewSet(ModelViewSet):
                 {ERRORS_KEY: FAVORITE_ALREADY_EXISTS},
                 status=HTTP_400_BAD_REQUEST,
             )
-        serializer = RecipeShortReadSerializer(recipe)
-        return Response(
-            serializer.data,
-            status=HTTP_201_CREATED,
-        )
 
-    def delete_from_favorite(self, request, recipe):
+        serializer = RecipeShortReadSerializer(recipe)
+        return Response(serializer.data, status=HTTP_201_CREATED)
+
+    @action(
+        methods=['DELETE'],
+        detail=True,
+        permission_classes=[IsAuthenticated]
+    )
+    def unfavorite(self, request, pk=None):
+        recipe = get_object_or_404(Recipe, pk=pk)
+
         favorite = Favorite.objects.filter(user=request.user, recipe=recipe)
         if not favorite.exists():
             return Response(
                 {ERRORS_KEY: FAVORITE_DONT_EXIST},
                 status=HTTP_400_BAD_REQUEST,
             )
+
         favorite.delete()
         return Response(status=HTTP_204_NO_CONTENT)
-
-    @action(
-        methods=('get', 'delete',),
-        detail=True,
-        permission_classes=(IsAuthenticated,)
-    )
-    def favorite(self, request, pk=None):
-        recipe = get_object_or_404(Recipe, pk=pk)
-        if request.method == 'GET':
-            return self.add_to_favorite(request, recipe)
-        return self.delete_from_favorite(request, recipe)

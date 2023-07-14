@@ -81,11 +81,8 @@ class UserSubscribeViewSet(UserViewSet):
             author=author
         )
 
-        if request.method == 'DELETE':
-            subscription.delete()
-            return Response(status=HTTP_204_NO_CONTENT)
-
-        return Response(status=HTTP_400_BAD_REQUEST)
+        subscription.delete()
+        return Response(status=HTTP_204_NO_CONTENT)
 
 
 class ShoppingCartViewSet(GenericViewSet):
