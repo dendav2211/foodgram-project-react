@@ -1,13 +1,17 @@
-import os
+from os import environ
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('SECRET_KEY', default='secretkey')
+SECRET_KEY = environ['SECRET_KEY']
 
-DEBUG = False
+DEBUG = environ.get('DEBUG', 'FALSE').upper() == 'TRUE'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+ALLOWED_HOSTS = environ['ALLOWED_HOSTS'].split(',')
 
 INTERNAL_IPS = ['127.0.0.1']
 
@@ -25,7 +29,6 @@ INSTALLED_APPS = [
     'djoser',
     'users.apps.UsersConfig',
     'recipes',
-    'api'
 ]
 
 MIDDLEWARE = [
@@ -61,12 +64,12 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'django'),
-        'USER': os.getenv('POSTGRES_USER', 'django'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', ''),
-        'PORT': os.getenv('DB_PORT', 5432)
+        'ENGINE': environ['DB_ENGINE'],
+        'NAME': environ['DB_NAME'],
+        'USER': environ['POSTGRES_USER'],
+        'PASSWORD': environ['POSTGRES_PASSWORD'],
+        'HOST': environ['DB_HOST'],
+        'PORT': environ['DB_PORT'],
     }
 }
 

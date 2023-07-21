@@ -6,7 +6,7 @@ from foodgram.settings import DEBUG
 
 api = [
     path('', include('users.urls', namespace='users')),
-    path('', include('recipes.urls', namespace='recipes')),
+    path('', include('api.urls', namespace='recipes')),
 ]
 
 urlpatterns = [
@@ -16,6 +16,7 @@ urlpatterns = [
 
 if DEBUG:
     import debug_toolbar
+
     urlpatterns += [
         path('__debug__/', include(debug_toolbar.urls), name='debug_toolbar')
     ]
